@@ -8,6 +8,7 @@ module.exports = function (connect, opts) {
     var Session = connect.session.Session;
 
     // Get options
+    opts = opts || {};
     if(typeof opts !== 'object') {
         throw new TypeError('expected an options object as second argument');
     }
