@@ -27,9 +27,10 @@ The middleware supports the following configuration object that can be sent as a
 	{
 		ipCheck: {boolean} // Defines if IP must be consistent during the session - defaults to true
 		uaCheck: {boolean} // Defines if UA must be consistent during the session - defaults to true
-		freshTimeout: {time in ms} // Time since last request still under the maxFreshTimeout when the session is considered
-															 // fresh - defaults to 5 minutes
-		maxFreshTimeout: {time in ms} // Time since login after which the session is stale no matter the activity
+		freshTimeout: {time in ms} // Time since last request still under the maxFreshTimeout
+						// when the session is considered fresh - defaults to 5 minutes
+		maxFreshTimeout: {time in ms} // Time after which the session is considered stale
+						// no matter the activity
 	}
 
 The IP and UA (User Agent) checks are a method against session hijacking - if the IP or User Agent changes mid-session then
