@@ -7,8 +7,8 @@ connect with the aim of providing few convenience functions and security feature
 
 # Usage
 
-To use easy-session simply require the module and run it with express or connect. This will return the middleware to bind
-to the stack. It can easily be done with two lines:
+To use easy-session simply require the module and run the .main function with express or connect.
+This will return the middleware to bind to the stack. It can easily be done with two lines:
 
 	var express = require('express');
 	var easySession = require('easy-session'); // Require the module : line 1
@@ -17,12 +17,13 @@ to the stack. It can easily be done with two lines:
 
 	app.use(express.cookieParser());
 	app.use(express.session({secret: 'keyboard cat'});
-	app.use(easySession(express)); // Bind the module : line 2
+	app.use(easySession.main(express)); // Bind the module : line 2
 
 
 # Options
 
-The middleware supports the following configuration object that can be sent as a second argument to the easySession function
+The middleware supports the following configuration object that can be sent as a second argument to the easySession.main
+function
 
 	{
 		ipCheck: {boolean} // Defines if IP must be consistent during the session - defaults to true
@@ -40,17 +41,26 @@ it is a good chance that the session has been hijacked. In which case it should 
 
 easy-session adds the following extra functions to the Session object.
 
-## login(cb)
+## login([extend], cb)
 
 Function for logging the user in.
 Regenerates the session and adds _loggedInAt to the session object.
 Depending on the configuration also adds _ip and _ua for continuity checks.
+If an extend object is added then the key:value pairs are added to the session.
 
 	req.session.login(function (err) {
 		if(!err) {
 			// Here we have a logged in session
 		}
 	});
+
+	req.session.login({userId: 10}, function (err) {
+	  if(!err) {
+	    // Here we have a logged in session
+	    console.log(req.session.userId); // Will print 10;
+	  }
+	});
+
 
 ## logout(cb)
 
@@ -72,6 +82,15 @@ Returns true if logged out, false if logged in.
 		// Logged in user
 	}
 
+## isLoggedIn()
+
+Function for checking if the user is logged in.
+Will return the opposite of isGuest();
+
+	if(req.session.isLoggedIn()) {
+		// Logged in user
+	}
+
 ## isFresh()
 
 Function for checking if the logged in session is fresh or stale.
@@ -80,6 +99,32 @@ Returns true if fresh, false if stale.
 	if(req.session.isFresh()) {
 		// User has logged in recently - session is fresh
 	}
+
+# isLoggedInMiddleware
+
+Easy-session also provides an isLoggedInMiddleware to check if the user is logged in and handle it accordingly.
+Usage:
+
+	app.get('/restricted', easySession.isLoggedIn(), function (req, res, next) {
+		// If the user reaches this then they are logged in.
+		// Otherwise they get 401
+	});
+
+You can also set it before all validation routes
+
+	app.all('*', easySession.isLoggedIn());
+
+	app.get('/restricted', function (req, res, next) {
+		// If the user reaches this then they are logged in.
+    // Otherwise they get 401
+	});
+
+You can pass a custom error handler as well
+
+	app.all('*', easySession.isLoggedIn(function (req, res, next) {
+		// A user that is logged out will reach this.
+		// Can handle unauthorized here.
+	}));
 
 ## License
 

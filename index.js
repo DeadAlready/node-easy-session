@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function (connect, opts) {
+module.exports.main = function easySessionMain(connect, opts) {
 
     if(!connect) {
         throw new TypeError('expected connect or express object as first argument');
@@ -25,9 +25,17 @@ module.exports = function (connect, opts) {
      * Function for logging the user in.
      * Regenerates the session and adds _loggedInAt to the session object.
      * Depending on the configuration also adds _ip and _ua for continuity checks.
+     * @param obj - optional properties to set on created session
      * @param cb
      */
-    Session.prototype.login = function login(cb) {
+    Session.prototype.login = function login(extend, cb) {
+        if(typeof extend === 'function') {
+            cb = extend;
+            extend = false;
+        } else if (typeof extend !== 'object') {
+            throw new TypeError('First parameter expected to be an object');
+        }
+
         var req = this.req;
         this.regenerate(function (err) {
             if(err) {
@@ -44,6 +52,12 @@ module.exports = function (connect, opts) {
             if(uaCheck) {
                 req.session._ua = req.headers['user-agent'];
             }
+            if(extend) {
+                Object.keys(extend).forEach(function (key) {
+                    req.session[key] = extend[key];
+                });
+            }
+            req.session.save();
             cb();
         });
     };
@@ -71,6 +85,15 @@ module.exports = function (connect, opts) {
      */
     Session.prototype.isGuest = function isGuest() {
         return !this._loggedInAt; // If this is not set then we are not logged in
+    };
+
+    /**
+     * Function for checking if the user is logged in.
+     * Returns true if logged id, false if logged out.
+     * @returns {boolean}
+     */
+    Session.prototype.isLoggedIn = function isLoggedIn() {
+        return !this.isGuest();
     };
 
     /**
@@ -134,4 +157,23 @@ module.exports = function (connect, opts) {
         next();
     };
 
+};
+
+/**
+ * An express/connect middleware for checking if the user is loggedIn
+ * @param errorCallback
+ * @returns {Function}
+ */
+module.exports.isLoggedIn = function (errorCallback) {
+    return function (req, res, next) {
+        if(req.session.isLoggedIn()) {
+            next();
+            return;
+        }
+        if(errorCallback) {
+            errorCallback(req, res, next);
+            return;
+        }
+        res.send(401);
+    }
 };
