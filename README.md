@@ -41,11 +41,12 @@ it is a good chance that the session has been hijacked. In which case it should 
 
 easy-session adds the following extra functions to the Session object.
 
-## login([extend], cb)
+## login([role='authenticated'],[extend], cb)
 
 Function for logging the user in.
 Regenerates the session and adds _loggedInAt to the session object.
 Depending on the configuration also adds _ip and _ua for continuity checks.
+`Session.setRole` is called with the specified role
 If an extend object is added then the key:value pairs are added to the session.
 
 	req.session.login(function (err) {
@@ -55,6 +56,13 @@ If an extend object is added then the key:value pairs are added to the session.
 	});
 
 	req.session.login({userId: 10}, function (err) {
+	  if(!err) {
+	    // Here we have a logged in session
+	    console.log(req.session.userId); // Will print 10;
+	  }
+	});
+
+	req.session.login('admin', {userId: 10}, function (err) {
 	  if(!err) {
 	    // Here we have a logged in session
 	    console.log(req.session.userId); // Will print 10;
@@ -82,7 +90,7 @@ Returns true if logged out, false if logged in.
 		// Logged in user
 	}
 
-## isLoggedIn()
+## isLoggedIn([role])
 
 Function for checking if the user is logged in.
 Will return the opposite of isGuest();
@@ -90,6 +98,8 @@ Will return the opposite of isGuest();
 	if(req.session.isLoggedIn()) {
 		// Logged in user
 	}
+
+If a role is specified then it will also run `Session.hasRole` with the given role
 
 ## isFresh()
 
@@ -100,9 +110,33 @@ Returns true if fresh, false if stale.
 		// User has logged in recently - session is fresh
 	}
 
-# isLoggedInMiddleware
+## setRole(role)
 
-Easy-session also provides an isLoggedInMiddleware to check if the user is logged in and handle it accordingly.
+Function for setting a role in the session.
+
+	req.session.setRole('admin');
+
+## getRole()
+
+Function for returning a role from the session. Will return 'guest' if no role specified.
+
+	var role = req.session.getRole();
+
+## hasRole(role)
+
+Function for validating if the user has the specified role.
+
+	if(req.session.hasRole('admin')) {
+		// User is admin
+	}
+
+# Middleware
+
+Easy-session provides some middleware for easier session checking
+
+## isLoggedIn([errorCallback])
+
+Easy-session also provides an isLoggedIn to check if the user is logged in and handle it accordingly.
 Usage:
 
 	app.get('/restricted', easySession.isLoggedIn(), function (req, res, next) {
@@ -125,6 +159,16 @@ You can pass a custom error handler as well
 		// A user that is logged out will reach this.
 		// Can handle unauthorized here.
 	}));
+
+## checkRole(role, [errorCallback])
+
+Returns a middleware array to check if the user is logged in and in a given role.
+
+	app.get('/restricted', easySession.checkRole('admin'), function (req, res, next) {
+    // If the user reaches this then they are logged in and have the 'admin' role
+    // Otherwise they get 401
+	});
+
 
 ## License
 

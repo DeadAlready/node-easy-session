@@ -28,12 +28,21 @@ module.exports.main = function easySessionMain(connect, opts) {
      * @param obj - optional properties to set on created session
      * @param cb
      */
-    Session.prototype.login = function login(extend, cb) {
+    Session.prototype.login = function login(role, extend, cb) {
+        if(typeof role === 'function') {
+            cb = role;
+            extend = false;
+            role = 'authenticated';
+        } else if (typeof role === 'object') {
+            cb = extend;
+            extend = role;
+            role = 'authenticated';
+        }
         if(typeof extend === 'function') {
             cb = extend;
             extend = false;
         } else if (typeof extend !== 'object') {
-            throw new TypeError('First parameter expected to be an object');
+            throw new TypeError('Second parameter expected to be an object');
         }
 
         var req = this.req;
@@ -45,6 +54,7 @@ module.exports.main = function easySessionMain(connect, opts) {
             // Add logged in date
             req.session._loggedInAt = Date.now();
             req.session._lastRequestAt = Date.now();
+            req.session.setRole(role);
 
             if(ipCheck) {
                 req.session._ip = req.ip;
@@ -90,10 +100,15 @@ module.exports.main = function easySessionMain(connect, opts) {
     /**
      * Function for checking if the user is logged in.
      * Returns true if logged id, false if logged out.
+     *
+     * @param [optional] {string} - If present the user is also checked for the role
      * @returns {boolean}
      */
-    Session.prototype.isLoggedIn = function isLoggedIn() {
-        return !this.isGuest();
+    Session.prototype.isLoggedIn = function isLoggedIn(role) {
+        if(!role) {
+            return !this.isGuest();
+        }
+        return !this.isGuest() && this.hasRole(role);
     };
 
     /**
@@ -113,6 +128,32 @@ module.exports.main = function easySessionMain(connect, opts) {
             return true;
         }
         return false;
+    };
+
+    /**
+     * Function setting a role on the session
+     * @returns {boolean}
+     */
+    Session.prototype.setRole = function setRole(role) {
+        this._role = role;
+    };
+
+    /**
+     * Function getting a role from the session
+     * @returns {boolean}
+     */
+    Session.prototype.getRole = function getRole() {
+        return this._role || 'guest';
+    };
+
+    /**
+     * Function checking the session role
+     *
+     * returns true if given role matches the session role, false otherwise
+     * @returns {boolean}
+     */
+    Session.prototype.hasRole = function hasRole(role) {
+        return this.getRole() === role;
     };
 
     /**
@@ -164,7 +205,7 @@ module.exports.main = function easySessionMain(connect, opts) {
  * @param errorCallback
  * @returns {Function}
  */
-module.exports.isLoggedIn = function (errorCallback) {
+function isLoggedIn(errorCallback) {
     return function (req, res, next) {
         if(req.session.isLoggedIn()) {
             next();
@@ -175,5 +216,53 @@ module.exports.isLoggedIn = function (errorCallback) {
             return;
         }
         res.send(401);
-    }
+    };
+}
+module.exports.isLoggedIn = isLoggedIn;
+
+///**
+// * An express/connect middleware for checking if the users session has certain value
+// * @param key - key to check
+// * @param value - value to check for
+// * @param errorCallback
+// * @returns {Function}
+// */
+//function checkValue(key, value, errorCallback) {
+//    return function (req, res, next) {
+//        if(req.session[key] === value) {
+//            next();
+//            return;
+//        }
+//        if(errorCallback) {
+//            errorCallback(req, res, next);
+//            return;
+//        }
+//        res.send(401);
+//    };
+//}
+//module.exports.hasValue = checkValue;
+
+/**
+ * An express/connect middleware for checking if the user is logged in and has
+ * certain _role value
+ *
+ * @param role - role to check for
+ * @param errorCallback
+ * @returns {Function}
+ */
+module.exports.checkRole = function checkRole(role, errorCallback) {
+    return [
+        isLoggedIn(errorCallback), // Check if logged in
+        function (req, res, next) { // Check role
+            if(req.session.hasRole(role)) {
+                next();
+                return;
+            }
+            if(errorCallback) {
+                errorCallback(req, res, next);
+                return;
+            }
+            res.send(401);
+        }
+    ];
 };
