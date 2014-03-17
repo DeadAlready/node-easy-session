@@ -41,7 +41,7 @@ module.exports.main = function easySessionMain(connect, opts) {
         if(typeof extend === 'function') {
             cb = extend;
             extend = false;
-        } else if (typeof extend !== 'object') {
+        } else if (extend && typeof extend !== 'object') {
             throw new TypeError('Second parameter expected to be an object');
         }
 
