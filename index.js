@@ -3,9 +3,9 @@
 module.exports.main = function easySessionMain(connect, opts) {
 
     if(!connect) {
-        throw new TypeError('expected connect or express object as first argument');
+        throw new TypeError('expected connect or express or express-session object as first argument');
     }
-    var Session = connect.session.Session;
+    var Session = connect.Session || connect.session.Session;
 
     // Get options
     opts = opts || {};
