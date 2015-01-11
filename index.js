@@ -89,6 +89,14 @@ module.exports.main = function easySessionMain(connect, opts) {
     };
 
     /**
+     * Function for setting the last request for current moment
+     * @returns {*}
+     */
+    Session.prototype.setLastRequest = function setLastRequest() {
+        this._lastRequestAt = Date.now();
+    };
+
+    /**
      * Function for checking if the user is a guest.
      * Returns true if logged out, false if logged in.
      * @returns {boolean}
@@ -169,6 +177,15 @@ module.exports.main = function easySessionMain(connect, opts) {
             next(new Error('Session object missing'));
             return;
         }
+
+        function refresh(){
+            res.removeListener('finish', refresh);
+            res.removeListener('close', refresh);
+            req.session.setLastRequest();
+        }
+
+        res.on('finish', refresh);
+        res.on('close', refresh);
 
         if(req.session.isGuest()) { // If not logged in then continue
             next();
