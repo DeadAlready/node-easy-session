@@ -160,9 +160,18 @@ You can pass a custom error handler as well
 		// Can handle unauthorized here.
 	}));
 
+## isFresh([errorCallback])
+
+Returns a middleware to check if the user is logged in and the session is fresh.
+
+	app.get('/restricted', easySession.isFresh(), function (req, res, next) {
+    // If the user reaches this then they are logged in and session is fresh
+    // Otherwise they get 401
+	});
+
 ## checkRole(role, [errorCallback])
 
-Returns a middleware array to check if the user is logged in and in a given role.
+Returns a middleware to check if the user is logged in and in a given role.
 
 	app.get('/restricted', easySession.checkRole('admin'), function (req, res, next) {
     // If the user reaches this then they are logged in and have the 'admin' role

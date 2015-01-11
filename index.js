@@ -237,27 +237,25 @@ function isLoggedIn(errorCallback) {
 }
 module.exports.isLoggedIn = isLoggedIn;
 
-///**
-// * An express/connect middleware for checking if the users session has certain value
-// * @param key - key to check
-// * @param value - value to check for
-// * @param errorCallback
-// * @returns {Function}
-// */
-//function checkValue(key, value, errorCallback) {
-//    return function (req, res, next) {
-//        if(req.session[key] === value) {
-//            next();
-//            return;
-//        }
-//        if(errorCallback) {
-//            errorCallback(req, res, next);
-//            return;
-//        }
-//        res.send(401);
-//    };
-//}
-//module.exports.hasValue = checkValue;
+/**
+ * An express/connect middleware for checking if the user is loggedIn and session isFresh
+ * @param errorCallback
+ * @returns {Function}
+ */
+function isFresh(errorCallback) {
+    return function (req, res, next) {
+        if(req.session.isFresh()) {
+            next();
+            return;
+        }
+        if(errorCallback) {
+            errorCallback(req, res, next);
+            return;
+        }
+        res.send(401);
+    };
+}
+module.exports.isFresh = isFresh;
 
 /**
  * An express/connect middleware for checking if the user is logged in and has
@@ -268,18 +266,15 @@ module.exports.isLoggedIn = isLoggedIn;
  * @returns {Function}
  */
 module.exports.checkRole = function checkRole(role, errorCallback) {
-    return [
-        isLoggedIn(errorCallback), // Check if logged in
-        function (req, res, next) { // Check role
-            if(req.session.hasRole(role)) {
-                next();
-                return;
-            }
-            if(errorCallback) {
-                errorCallback(req, res, next);
-                return;
-            }
-            res.send(401);
+    return function (req, res, next) { // Check role
+        if(req.session.isLoggedIn(role)) {
+            next();
+            return;
         }
-    ];
+        if(errorCallback) {
+            errorCallback(req, res, next);
+            return;
+        }
+        res.send(401);
+    };
 };
