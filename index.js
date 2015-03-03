@@ -232,7 +232,12 @@ function isLoggedIn(errorCallback) {
             errorCallback(req, res, next);
             return;
         }
-        (res.sendStatus || res.send)(401);
+
+        if(res.sendStatus) {
+            res.sendStatus(401);
+        } else {
+            res.send(401);
+        }
     };
 }
 module.exports.isLoggedIn = isLoggedIn;
@@ -252,7 +257,12 @@ function isFresh(errorCallback) {
             errorCallback(req, res, next);
             return;
         }
-        (res.sendStatus || res.send)(401);
+
+        if(res.sendStatus) {
+            res.sendStatus(401);
+        } else {
+            res.send(401);
+        }
     };
 }
 module.exports.isFresh = isFresh;
@@ -275,6 +285,11 @@ module.exports.checkRole = function checkRole(role, errorCallback) {
             errorCallback(req, res, next);
             return;
         }
-        (res.sendStatus || res.send)(401);
+
+        if(res.sendStatus) {
+            res.sendStatus(401);
+        } else {
+            res.send(401);
+        }
     };
 };
