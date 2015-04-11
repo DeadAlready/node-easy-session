@@ -11,6 +11,22 @@ To use easy-session simply require the module and run the .main function with ex
 This will return the middleware to bind to the stack. It can easily be done with two lines:
 
 	var express = require('express');
+	var session = require('express-session');
+	var easySession = require('easy-session'); // Require the module : line 1
+
+	var app = express();
+
+	app.use(express.cookieParser());
+	app.use(session({
+	    secret: 'keyboard cat',
+	    resave: false,
+	    saveUninitialized: true
+	}));
+	app.use(easySession.main(session)); // Bind the module : line 2
+
+Or in Express v3
+
+	var express = require('express');
 	var easySession = require('easy-session'); // Require the module : line 1
 
 	var app = express();
@@ -18,7 +34,6 @@ This will return the middleware to bind to the stack. It can easily be done with
 	app.use(express.cookieParser());
 	app.use(express.session({secret: 'keyboard cat'});
 	app.use(easySession.main(express)); // Bind the module : line 2
-
 
 # Options
 
