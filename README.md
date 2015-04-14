@@ -12,11 +12,12 @@ This will return the middleware to bind to the stack. It can easily be done with
 
 	var express = require('express');
 	var session = require('express-session');
+	var cookieParser = require('cookie-parser');
 	var easySession = require('easy-session'); // Require the module : line 1
 
 	var app = express();
 
-	app.use(express.cookieParser());
+	app.use(cookieParser());
 	app.use(session({
 	    secret: 'keyboard cat',
 	    resave: false,

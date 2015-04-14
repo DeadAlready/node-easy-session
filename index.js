@@ -144,6 +144,7 @@ module.exports.main = function easySessionMain(connect, opts) {
      */
     Session.prototype.setRole = function setRole(role) {
         this._role = role;
+        return this;
     };
 
     /**
