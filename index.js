@@ -161,8 +161,33 @@ module.exports.main = function easySessionMain(connect, opts) {
      * returns true if given role matches the session role, false otherwise
      * @returns {boolean}
      */
-    Session.prototype.hasRole = function hasRole(role) {
-        return this.getRole() === role;
+    Session.prototype.hasRole = function hasRole(role, reverse) {
+
+        if(reverse) {
+            return this.doesNotHaveRole(role);
+        }
+
+        var current = this.getRole();
+        if(Array.isArray(role)) {
+            return role.indexOf(current) !== -1;
+        }
+
+        return current === role;
+    };
+
+    /**
+     * Function checking the session role not to match a set
+     *
+     * returns false if given role matches the session role, true otherwise
+     * @returns {boolean}
+     */
+    Session.prototype.doesNotHaveRole = function doesNotHaveRole(role) {
+        var current = this.getRole();
+        if(Array.isArray(role)) {
+            return role.indexOf(current) === -1;
+        }
+
+        return current !== role;
     };
 
     /**
@@ -265,12 +290,17 @@ module.exports.isFresh = isFresh;
  * certain _role value
  *
  * @param role - role to check for
+ * @param reverse - secondary parameter for hasRole
  * @param errorCallback
  * @returns {Function}
  */
-module.exports.checkRole = function checkRole(role, errorCallback) {
+module.exports.checkRole = function checkRole(role, reverse, errorCallback) {
+    if(typeof reverse === 'function') {
+        errorCallback = reverse;
+        reverse = false;
+    }
     return function (req, res, next) { // Check role
-        if(req.session.isLoggedIn(role)) {
+        if(req.session.hasRole(role, reverse)) {
             next();
             return;
         }

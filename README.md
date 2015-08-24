@@ -138,13 +138,40 @@ Function for returning a role from the session. Will return 'guest' if no role s
 
 	var role = req.session.getRole();
 
-## hasRole(role)
+## hasRole(role, [reverse])
 
-Function for validating if the user has the specified role.
+Function for validating if the user has the specified role. Accepts string and array input
 
 	if(req.session.hasRole('admin')) {
 		// User is admin
 	}
+	
+	if(req.session.hasRole(['admin', 'user'])) {
+		// User is admin or user
+	}
+	
+Also accepts second parameter which reverses the check.
+
+	if(req.session.hasRole('admin', true)) {
+		// User is not admin
+	}
+	
+	if(req.session.hasRole(['admin', 'user'], true)) {
+		// User is neither admin or user
+	}
+	
+## doesNotHaveRole(role)
+
+Function for validating if a user does not have a specified role. Is equal to hasRole(role, true).
+
+	if(req.session.doesNotHaveRole('admin')) {
+		// User is not admin
+	}
+	
+	if(req.session.doesNotHaveRole(['admin', 'user'])) {
+		// User is neither admin or user
+	}
+
 
 # Middleware
 
@@ -187,12 +214,24 @@ Returns a middleware to check if the user is logged in and the session is fresh.
 
 ## checkRole(role, [errorCallback])
 
-Returns a middleware to check if the user is logged in and in a given role.
+Returns a middleware to check if the user has a given role.
 
 	app.get('/restricted', easySession.checkRole('admin'), function (req, res, next) {
-    // If the user reaches this then they are logged in and have the 'admin' role
+    // If the user reaches this then they the 'admin' role
     // Otherwise they get 401
 	});
+
+### NB! As of 0.2 it does no longer check if user is logged in
+
+In order to check for both you should use two middlewares together
+
+	app.get('/restricted', 
+		easySession.isLoggedIn()
+		easySession.checkRole('admin'), 
+		function (req, res, next) {
+	    // If the user reaches this then they they are logged in and have the 'admin' role
+	    // Otherwise they get 401
+		});
 
 
 ## License
