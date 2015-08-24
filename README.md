@@ -160,15 +160,15 @@ Also accepts second parameter which reverses the check.
 		// User is neither admin or user
 	}
 	
-## doesNotHaveRole(role)
+## hasNotRole(role)
 
 Function for validating if a user does not have a specified role. Is equal to hasRole(role, true).
 
-	if(req.session.doesNotHaveRole('admin')) {
+	if(req.session.hasNotRole('admin')) {
 		// User is not admin
 	}
 	
-	if(req.session.doesNotHaveRole(['admin', 'user'])) {
+	if(req.session.hasNotRole(['admin', 'user'])) {
 		// User is neither admin or user
 	}
 

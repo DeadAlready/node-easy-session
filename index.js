@@ -164,7 +164,7 @@ module.exports.main = function easySessionMain(connect, opts) {
     Session.prototype.hasRole = function hasRole(role, reverse) {
 
         if(reverse) {
-            return this.doesNotHaveRole(role);
+            return this.hasNotRole(role);
         }
 
         var current = this.getRole();
@@ -181,7 +181,7 @@ module.exports.main = function easySessionMain(connect, opts) {
      * returns false if given role matches the session role, true otherwise
      * @returns {boolean}
      */
-    Session.prototype.doesNotHaveRole = function doesNotHaveRole(role) {
+    Session.prototype.hasNotRole = function hasNotRole(role) {
         var current = this.getRole();
         if(Array.isArray(role)) {
             return role.indexOf(current) === -1;
