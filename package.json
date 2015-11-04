@@ -1,23 +1,24 @@
 {
-    "author": "Karl Düüna <karl.dyyna@gmail.com>",
-    "name": "easy-session",
-    "description": "Session management and security simplifier",
-    "keywords": [
-        "session",
-        "management"
-    ],
-    "version": "0.2.1",
-    "repository": {
-        "type": "git",
-        "url": "git@github.com:DeadAlready/node-easy-session"
-    },
-    "main": "index.js",
-    "dependencies": {
-    },
-    "devDependencies": {
-    },
-    "optionalDependencies": {},
-    "engines": {
-        "node": ">=0.8.0"
-    }
+  "author": "Karl Düüna <karl.dyyna@gmail.com>",
+  "name": "easy-session",
+  "description": "Session management and security simplifier",
+  "keywords": [
+    "session",
+    "management",
+    "rbac"
+  ],
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:DeadAlready/node-easy-session"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "easy-rbac": "^1.2.0"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": ">=0.8.0"
+  }
 }

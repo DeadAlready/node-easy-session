@@ -1,5 +1,7 @@
 'use strict';
 
+var RBAC = require('easy-rbac');
+
 module.exports.main = function easySessionMain(connect, opts) {
 
     if(!connect) {
@@ -18,6 +20,10 @@ module.exports.main = function easySessionMain(connect, opts) {
     var uaCheck = opts.uaCheck === undefined ? true : !!opts.uaCheck;
     var freshTimeout = opts.freshTimeout || (5 * 60 * 1000);
     var maxFreshTimeout = opts.maxFreshTimeout || (10 * 60 * 1000);
+    var rbac;
+    if(opts.rbac) {
+        rbac = new RBAC(opts.rbac);
+    }
 
     // Extend the Session object
 
@@ -190,6 +196,12 @@ module.exports.main = function easySessionMain(connect, opts) {
         return current !== role;
     };
 
+    if(rbac) {
+        Session.prototype.can = function can(operation, params, cb) {
+            return rbac.can(this.getRole(), operation, params, cb);
+        };
+    }
+
     /**
      * Middleware for removing cookies from browser cache and
      * depending on configuration checking if users IP and UA have changed mid session.
@@ -310,5 +322,47 @@ module.exports.checkRole = function checkRole(role, reverse, errorCallback) {
         }
 
         (res.sendStatus || res.send).call(res, 401);
+    };
+};
+
+/**
+ * An express/connect middleware factory for checking if the is allowed for operation
+ *
+ * @param operation - operation to check for
+ * @param params - secondary parameter for can
+ * @param errorCallback
+ * @returns {Function}
+ */
+module.exports.can = function can(operation, params, errorCallback) {
+    if(typeof operation !== 'string') {
+        throw new TypeError('Expected first parameter to be string');
+    }
+    return function canAccess(req, res, next) {
+        var resultFn = function (err, can) {
+            if(err || !can) {
+                errFn();
+                return;
+            }
+            next();
+        };
+        var errFn = function () {
+            if(errorCallback) {
+                errorCallback(req, res, next);
+                return;
+            }
+
+            (res.sendStatus || res.send).call(res, 403);
+        };
+        if(typeof params === 'function') {
+            params(req, res, function (err, data) {
+                if(err) {
+                    errFn(new Error('RBAC check failed'));
+                    return;
+                }
+                req.session.can(operation, data, resultFn);
+            });
+            return;
+        }
+        req.session.can(operation, params, resultFn);
     };
 };

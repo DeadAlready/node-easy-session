@@ -48,6 +48,7 @@ function
 						// when the session is considered fresh - defaults to 5 minutes
 		maxFreshTimeout: {time in ms} // Time after which the session is considered stale
 						// no matter the activity
+		rbac: {object or function} // optional, refer to easy-rbac
 	}
 
 The IP and UA (User Agent) checks are a method against session hijacking - if the IP or User Agent changes mid-session then
@@ -172,6 +173,37 @@ Function for validating if a user does not have a specified role. Is equal to ha
 		// User is neither admin or user
 	}
 
+## can(operation, [params], [cb])
+
+*This function is available only if `rbac` configuration property was set.*
+   
+This function uses the `getRole` function of the session object to invoke `easy-rbac`. Will return promise or invoke callback if provided.
+
+	 // as promise
+	 app.get('/post/save', function (req, res, next) {
+			 req.session.can('post:save', {userId: 1, ownerId: 1}).then(function () {
+					 res.send('yes');
+			 }, function (err) {
+					 res.sendStatus(403);
+			 });
+	 });
+	 
+	 // with callback
+	 app.get('/post/save', function (req, res, next) {
+			 req.session.can('post:save', {userId: 1, ownerId: 1}, function (err, can) {
+				 if(err) {
+					 //something went wrong with check
+					 res.sendStatus(403);
+					 return;
+				 }
+				 if(!can) {
+					 // not allowed
+					 res.sendStatus(403);
+					 return;
+				 }
+				 res.send('yes');
+			 });
+	 });
 
 # Middleware
 
@@ -233,6 +265,33 @@ In order to check for both you should use two middlewares together
 	    // Otherwise they get 401
 		});
 
+##can(operation, [params(err, data)], [errorCallback(req, res, error)])
+
+The easy-session-rbac also exposes a middleware factory `can`.
+
+If `params` is a function then it will be invoked and once it returns the result then it will call the rbac with the result as params.
+
+If `errorCallback` is provided then it will be invoked if check fails, otherwise `res.sendStatus(403)` is invoked.
+
+    // With no params
+    app.get('/middleware/post/delete', esRbac.can('post:delete'), function (req, res, next) {
+        res.send('yes');
+    });
+    
+    // With params function
+    app.get('/middleware/post/save/:id', esRbac.can('post:save', function (req, res, cb) {
+        setTimeout(cb, 100, null, {userId: 1, ownerId: +req.params.id});
+    }), function (req, res, next) {
+        res.send('yes');
+    });
+    
+    // With errorCallback
+    app.get('/middleware/post/delete', esRbac.can('post:delete', {}, function (req, res, err) {
+        console.log(err);
+        res.send('You are not authorized');
+    }), function (req, res, next) {
+        res.send('yes');
+    });
 
 ## License
 
