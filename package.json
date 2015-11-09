@@ -7,14 +7,14 @@
     "management",
     "rbac"
   ],
-  "version": "1.0.0",
+  "version": "1.2.0",
   "repository": {
     "type": "git",
     "url": "git@github.com:DeadAlready/node-easy-session"
   },
   "main": "index.js",
   "dependencies": {
-    "easy-rbac": "^1.2.0"
+    "easy-rbac": "^2.0.0"
   },
   "devDependencies": {},
   "optionalDependencies": {},
