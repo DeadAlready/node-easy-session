@@ -5,17 +5,21 @@ connect with the aim of providing few convenience functions and security feature
 
     $ npm install easy-session
 
+# NB! Breaking changes in v2
+
+* Callbacks are no longer supported. Promises are used instead
+
 # Usage
 
 To use easy-session simply require the module and run the .main function with express or connect.
 This will return the middleware to bind to the stack. It can easily be done with two lines:
 
-	var express = require('express');
-	var session = require('express-session');
-	var cookieParser = require('cookie-parser');
-	var easySession = require('easy-session'); // Require the module : line 1
+	const express = require('express');
+	const session = require('express-session');
+	const cookieParser = require('cookie-parser');
+	const easySession = require('easy-session'); // Require the module : line 1
 
-	var app = express();
+	let app = express();
 
 	app.use(cookieParser());
 	app.use(session({
@@ -27,10 +31,10 @@ This will return the middleware to bind to the stack. It can easily be done with
 
 Or in Express v3
 
-	var express = require('express');
-	var easySession = require('easy-session'); // Require the module : line 1
+	const express = require('express');
+	const easySession = require('easy-session'); // Require the module : line 1
 
-	var app = express();
+	let app = express();
 
 	app.use(express.cookieParser());
 	app.use(express.session({secret: 'keyboard cat'});
@@ -58,7 +62,7 @@ it is a good chance that the session has been hijacked. In which case it should 
 
 easy-session adds the following extra functions to the Session object.
 
-## login([role='authenticated'],[extend], cb)
+## login([role='authenticated'],[extend])
 
 Function for logging the user in.
 Regenerates the session and adds _loggedInAt to the session object.
@@ -66,37 +70,29 @@ Depending on the configuration also adds _ip and _ua for continuity checks.
 `Session.setRole` is called with the specified role
 If an extend object is added then the key:value pairs are added to the session.
 
-	req.session.login(function (err) {
-		if(!err) {
-			// Here we have a logged in session
-		}
-	});
+	req.session.login()
+		.then(() => //here we have a logged in session);
 
-	req.session.login({userId: 10}, function (err) {
-	  if(!err) {
-	    // Here we have a logged in session
-	    console.log(req.session.userId); // Will print 10;
-	  }
-	});
+	req.session.login({userId: 10})
+		.then(() => {
+			//here we have a logged in session
+			console.log(req.session.userId); // Will print 10;
+		});
 
-	req.session.login('admin', {userId: 10}, function (err) {
-	  if(!err) {
-	    // Here we have a logged in session
-	    console.log(req.session.userId); // Will print 10;
-	  }
-	});
+	req.session.login('admin', {userId: 10})
+    .then(() => {
+      //here we have a logged in session
+      console.log(req.session.userId); // Will print 10;
+    });
 
 
-## logout(cb)
+## logout()
 
 Function for logging out the user.
 Is just a proxy for session regeneration.
 
-	req.session.logout(function (err) {
-	  if(!err) {
-	    // Here we have a logged out session
-	  }
-	});
+	req.session.logout()
+		.then(() => // Here we have a logged out session);
 
 ## isGuest()
 
@@ -137,7 +133,7 @@ Function for setting a role in the session.
 
 Function for returning a role from the session. Will return 'guest' if no role specified.
 
-	var role = req.session.getRole();
+	const role = req.session.getRole();
 
 ## hasRole(role, [reverse])
 
@@ -173,36 +169,22 @@ Function for validating if a user does not have a specified role. Is equal to ha
 		// User is neither admin or user
 	}
 
-## can(operation, [params], [cb])
+## can(operation, [params])
 
 *This function is available only if `rbac` configuration property was set.*
    
-This function uses the `getRole` function of the session object to invoke `easy-rbac`. Will return promise or invoke callback if provided.
+This function uses the `getRole` function of the session object to invoke `easy-rbac`. Will return promise.
 
-	 // as promise
 	 app.get('/post/save', function (req, res, next) {
-			 req.session.can('post:save', {userId: 1, ownerId: 1}).then(function () {
-					 res.send('yes');
-			 }, function (err) {
-					 res.sendStatus(403);
-			 });
-	 });
-	 
-	 // with callback
-	 app.get('/post/save', function (req, res, next) {
-			 req.session.can('post:save', {userId: 1, ownerId: 1}, function (err, can) {
-				 if(err) {
-					 //something went wrong with check
-					 res.sendStatus(403);
-					 return;
-				 }
-				 if(!can) {
-					 // not allowed
-					 res.sendStatus(403);
-					 return;
-				 }
-				 res.send('yes');
-			 });
+			req.session.can('post:save', {userId: 1, ownerId: 1})
+			  .then(accessGranted => {
+			    if(accessGranted) {
+			      res.send('yes');
+			      return;
+		      }
+		      res.sendStatus(403);
+			  })
+			  .catch(next);
 	 });
 
 # Middleware
@@ -265,33 +247,39 @@ In order to check for both you should use two middlewares together
 	    // Otherwise they get 401
 		});
 
-##can(operation, [params(err, data)], [errorCallback(req, res, error)])
+##can(operation, [params(req, res) => Promise], [errorCallback(req, res, error)])
 
 The easy-session-rbac also exposes a middleware factory `can`.
 
-If `params` is a function then it will be invoked and once it returns the result then it will call the rbac with the result as params.
+If `params` is a function then it will be invoked and once the promise it returns resolves it will call the rbac with the result as params.
 
 If `errorCallback` is provided then it will be invoked if check fails, otherwise `res.sendStatus(403)` is invoked.
 
-    // With no params
-    app.get('/middleware/post/delete', esRbac.can('post:delete'), function (req, res, next) {
-        res.send('yes');
-    });
+	// With no params
+	app.get('/middleware/post/delete', esRbac.can('post:delete'), function (req, res, next) {
+	  res.send('yes');
+	});
+	
+	// With params function
+	app.get(
+	  '/middleware/post/save/:id', 
+	  esRbac.can('post:save', async (req, res) => ({userId: 1, ownerId: +req.params.id})), 
+	  function (req, res, next) {
+	    res.send('yes');
+	  }
+	);
     
-    // With params function
-    app.get('/middleware/post/save/:id', esRbac.can('post:save', function (req, res, cb) {
-        setTimeout(cb, 100, null, {userId: 1, ownerId: +req.params.id});
-    }), function (req, res, next) {
-        res.send('yes');
-    });
-    
-    // With errorCallback
-    app.get('/middleware/post/delete', esRbac.can('post:delete', {}, function (req, res, err) {
-        console.log(err);
-        res.send('You are not authorized');
-    }), function (req, res, next) {
-        res.send('yes');
-    });
+	// With errorCallback
+	app.get(
+	  '/middleware/post/delete', 
+	  esRbac.can('post:delete', {}, function (req, res, err) {
+	    console.log(err);
+	    res.send('You are not authorized');
+	  }), 
+	  function (req, res, next) {
+	    res.send('yes');
+	  }
+	);
 
 ## License
 

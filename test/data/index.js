@@ -1,31 +1,25 @@
 'use strict';
 
-var roles = {
-    user: {
-        can: ['account', 'post:add', {
-            name: 'post:save',
-            when: function (params, callback) {
-                setImmediate(callback, null, params.ownerId === params.userId);
-            }}
-        ]
-    },
-    manager: {
-        can: ['user', 'post']
-    },
-    admin: {
-        can: ['manager']
-    }
-};
-
-var objects = {
-    account: ['add','save','delete'],
-    post: ['add','save','delete']
+const roles = {
+  user: {
+    can: [
+      'account',
+      'post:add',
+      {name: 'post:save', when: async (params) => params.ownerId === params.userId}
+    ]
+  },
+  manager: {
+    can: ['post:delete'],
+    inherits: ['user']
+  },
+  admin: {
+    can: ['user:delete'],
+    inherits: ['manager']
+  }
 };
 
 module.exports.all = {
-    roles: roles,
-    objects: objects
+  roles,
 };
 
 module.exports.roles = roles;
-module.exports.objects = objects;
