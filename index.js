@@ -343,7 +343,7 @@ module.exports.can = function can(operation, params, errorCallback) {
 
     $promise.then(data => req.session.can(operation, data))
       .then(accessGranted => {
-        if(accessGranted) {
+        if(!accessGranted) {
           return Promise.reject(new Error('forbidden'));
         }
         next();
