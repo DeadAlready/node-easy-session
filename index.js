@@ -218,7 +218,10 @@ module.exports.main = function easySessionMain(connect, opts) {
     function refresh(){
       res.removeListener('finish', refresh);
       res.removeListener('close', refresh);
-      req.session.setLastRequest();
+      // v2.0.2 - using req.session.destroy will unset req.session and cause an error otherwise
+      if(req.session) {
+          req.session.setLastRequest();
+      }
     }
 
     res.on('finish', refresh);

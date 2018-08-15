@@ -281,6 +281,10 @@ If `errorCallback` is provided then it will be invoked if check fails, otherwise
 	  }
 	);
 
+## Changelog
+
+* v2.0.2 - account for usage of req.session.destroy()
+
 ## License
 
 The MIT License (MIT)
