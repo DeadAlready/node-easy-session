@@ -70,8 +70,8 @@ module.exports.main = function easySessionMain(connect, opts) {
         resolve();
       });
     });
-    
-    
+
+
   };
   /**
    * Function for logging out the user.
@@ -196,7 +196,6 @@ module.exports.main = function easySessionMain(connect, opts) {
 
   if(rbac) {
     Session.prototype.can = function can(operation, params, cb) {
-      console.log(this.getRole(), operation, params);
       return rbac.can(this.getRole(), operation, params, cb);
     };
   }
